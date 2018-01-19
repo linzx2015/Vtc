@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MUserDao">
+	<resultMap id="userMap" type="com.kkk.vtctrade.vo.master.MUser">
+		<id property="userId" column="user_id"/>
+		<result property="userName" column="user_name"/>
+		<result property="userPassword" column="user_password"/>
+		<result property="userCreateTime" column="user_create_time"/>
+	</resultMap>
+	
+	<parameterMap id="MUser" type="com.kkk.vtctrade.vo.master.MUser"/>
+
+	<sql id="Base_Column_List">
+		user_id,
+		user_name,
+		user_password,
+		user_create_time
+	</sql>
+
+	<insert id="insertOne" parameterMap="MUser">
+		insert into m_user(<include refid="Base_Column_List"></include>)
+		values(#{userId},#{userName},#{userPassword},#{userCreateTime})
+	</insert>
+
+	<update id="updateOne" parameterMap="MUser">
+		update  m_user 
+		<set>
+			user_name=#{userName},
+			user_password=#{userPassword},
+			user_create_time=#{userCreateTime}
+		</set> 
+		where user_id=#{userId}
+	</update>
+
+	<delete id="deleteOne" parameterMap="MUser">
+		<if test="userId!=null">
+			delete from m_user where user_id=#{userId}
+		</if>		
+	</delete>
+
+	<select id="findOne" parameterType="map" resultMap="userMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_user where
+		<choose>
+			<when test="userName!=null">
+				user_name=#{userName}
+			</when>
+			<when test="userId!=null">
+				user_name=#{userId}
+			</when>
+		</choose>
+	</select>
+
+	<sql id="orderSql">
+		<if test="sort_column=='userCreateTime'">
+		 	order by user_create_time
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="userMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as user_btc_uid
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_user
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (user_name like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by user_create_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+</mapper>

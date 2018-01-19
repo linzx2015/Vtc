@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MarketDetailDao">
+	<!--返回结果自定义map -->
+	<resultMap id="marketDetailMap" type="com.kkk.vtctrade.vo.master.MMarketDetail">
+		<id property="marketDetailId" column="market_detail_id"/>
+		<result property="virtualCoinId" column="virtual_coin_id"/>		
+		<result property="marketHighPrice" column="market_high_price"/>
+		<result property="marketLowPrice" column="market_low_price"/>
+		<result property="marketBuyPrice" column="market_buy_price"/>
+		<result property="marketSellPrice" column="market_sell_price"/>
+		<result property="marketLastPrice" column="market_last_price"/>
+		<result property="marketTradeNum" column="market_trade_num"/>
+		<result property="marketReturnTime" column="market_return_time"/>
+		<result property="marketCreateTime" column="market_create_time"/>
+		<result property="marketStatus" column="market_status"/>
+		<association property="virtualCoin" column="virtual_coin_id" javaType="com.kkk.vtctrade.vo.master.MVirtualCoin" select="queryVirtualCoinSql"/>
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		market_detail_id,
+		virtual_coin_id,
+		market_high_price,
+		market_low_price,
+		market_buy_price,
+		market_sell_price,
+		market_last_price,
+		market_trade_num,
+		market_return_time,
+		market_create_time,
+		market_status
+	</sql>
+	
+	<!--传入参数自定义map -->
+	<parameterMap id="MMarketDetail" type="com.kkk.vtctrade.vo.master.MMarketDetail"/>
+	
+	<insert id="insertOne" parameterMap="MMarketDetail">
+		insert into m_market_detail(<include refid="Base_Column_List"></include>)
+		values(#{marketDetailId},#{virtualCoinId},#{marketHighPrice},#{marketLowPrice},
+			#{marketBuyPrice},#{marketSellPrice},#{marketLastPrice},#{marketTradeNum},
+			#{marketReturnTime},#{marketCreateTime},#{marketStatus})
+	</insert>
+	
+	<update id="updateOne" parameterMap="MMarketDetail">
+		update  m_market_detail 
+		<set>
+			virtual_coin_id=#{virtualCoinId},
+			market_high_price=#{marketHighPrice},
+			market_low_price=#{marketLowPrice},
+			market_buy_price=#{marketBuyPrice},
+			market_sell_price=#{marketSellPrice},
+			market_last_price=#{marketLastPrice},
+			market_trade_num=#{marketTradeNum},
+			market_return_time=#{marketReturnTime},
+			market_create_time=#{marketCreateTime},
+			market_status={marketStatus}
+		</set> 
+		where market_detail_id=#{marketDetailId}
+	</update>
+	
+	<delete id="deleteOne" parameterMap="MMarketDetail">
+		<if test="marketDetailId!=null">
+			delete from m_market_detail where market_detail_id=#{marketDetailId}
+		</if>		
+	</delete>
+	
+	<resultMap id="coinMap" type="com.kkk.vtctrade.vo.master.MVirtualCoin">
+		<id property="virtualCoinId" column="virtual_coin_id"/>
+		<result property="virtualCoinName" column="virtual_coin_name"/>		
+		<result property="virtualCoinType" column="virtual_coin_type"/>
+		<result property="vitualCoinCreateTime" column="virtual_coin_create_time"/>
+		<result property="vitualCoinUpdateTime" column="virtual_coin_update_time"/>
+		<result property="virtualCreateUser" column="virtual_create_user"/>
+		<result property="virtualStatus" column="virtual_status"/>
+	</resultMap>
+	
+	<select id="queryVirtualCoinSql" resultMap="coinMap">
+		select * from m_virtual_coin where virtual_coin_id=#{virtualCoinId}
+	</select>
+	
+	<select id="findOne" parameterType="map" resultMap="marketDetailMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_market_detail 
+		<choose>
+		   <when test="marketDetailId!=null">
+		   	  where market_detail_id=#{marketDetailId}
+		   </when>
+		</choose>
+	</select>
+
+	<sql id="orderSql">
+		<if test="sort_column=='marketHighPrice'">
+		 	order by market_high_price
+		</if>
+		<if test="sort_column=='marketLowPrice'">
+		 	order by market_low_price 
+		</if>
+		<if test="sort_column=='marketBuyPrice'">
+		 	order by market_buy_price 
+		</if>
+		<if test="sort_column=='marketSellPrice'">
+		 	order by market_sell_price 
+		</if>
+		<if test="sort_column=='marketLastPrice'">
+		 	order by market_last_price 
+		</if>
+		<if test="sort_column=='marketTradeNum'">
+		 	order by market_trade_num 
+		</if>
+		<if test="sort_column=='marketReturnTime'">
+		 	order by market_return_time
+		</if>
+		<if test="sort_column=='marketCreateTime'">
+		 	order by market_create_time
+		</if>
+		<if test="sort_column=='marketStatus'">
+		 	order by market_status  
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="marketDetailMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as market_detail_id
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_market_detail
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (market_high_price like #{keywords} or market_trade_num like #{keywords} or market_status like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by market_create_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+	
+</mapper>

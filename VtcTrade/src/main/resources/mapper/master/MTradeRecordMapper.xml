@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MTradeRecordDao">
+	<!--返回结果自定义map -->
+	<resultMap id="tradeRecordMap" type="com.kkk.vtctrade.vo.master.MTradeRecord">
+		<id property="tradeRecordId" column="trade_record_id"/>
+		<result property="virtualCoinId" column="virtual_coin_id"/>		
+		<result property="tradeTime" column="trade_time"/>
+		<result property="tradePrice" column="trade_price"/>
+		<result property="tradeNum" column="trade_num"/>
+		<result property="tradeId" column="trade_id"/>
+		<result property="tradeType" column="trade_type"/>
+		<result property="tradeStatus" column="trade_status"/>
+		<result property="tradeRecordCreateTime" column="trade_record_create_time"/>
+		<association property="virtualCoin" column="virtual_coin_id" javaType="com.kkk.vtctrade.vo.master.MVirtualCoin" select="queryVirtualCoinSql"/>
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		trade_record_id,
+		virtual_coin_id,
+		trade_time,
+		trade_price,
+		trade_num,
+		trade_id,
+		trade_type,
+		trade_status,
+		trade_record_create_time
+	</sql>
+	
+	<!--传入参数自定义map -->
+	<parameterMap id="MTradeRecord" type="com.kkk.vtctrade.vo.master.MTradeRecord"/>
+	
+	<resultMap id="coinMap" type="com.kkk.vtctrade.vo.master.MVirtualCoin">
+		<id property="virtualCoinId" column="virtual_coin_id"/>
+		<result property="virtualCoinName" column="virtual_coin_name"/>		
+		<result property="virtualCoinType" column="virtual_coin_type"/>
+		<result property="vitualCoinCreateTime" column="virtual_coin_create_time"/>
+		<result property="vitualCoinUpdateTime" column="virtual_coin_update_time"/>
+		<result property="virtualCreateUser" column="virtual_create_user"/>
+		<result property="virtualStatus" column="virtual_status"/>
+	</resultMap>
+	
+	<select id="queryVirtualCoinSql" resultMap="coinMap">
+		select * from m_virtual_coin where virtual_coin_id=#{virtualCoinId}
+	</select>
+	
+	<insert id="insertOne" parameterMap="MTradeRecord">
+		insert into m_trade_record(<include refid="Base_Column_List"></include>)
+		values(#{tradeRecordId},#{virtualCoinId},#{tradeTime},#{tradePrice},#{tradeNum},
+				#{tradeId},#{tradeType},#{tradeStatus},#{tradeRecordCreateTime})
+	</insert>
+	
+	<update id="updateOne" parameterMap="MTradeRecord">
+		update  m_trade_record 
+		<set>
+			virtual_coin_id=#{virtualCoinId},
+			trade_time=#{tradeTime},
+			trade_price=#{tradePrice},
+			trade_num=#{tradeNum},
+			trade_id=#{tradeId},
+			trade_type=#{tradeType},
+			trade_status=#{tradeStatus},
+			trade_record_create_time=#{tradeRecordCreateTime}
+		</set> 
+		where trade_record_id=#{tradeRecordId}
+	</update>
+	
+	<delete id="deleteOne" parameterMap="MTradeRecord">
+		<if test="tradeRecordId!=null">
+			delete from m_trade_record where trade_record_id=#{tradeRecordId}
+		</if>		
+	</delete>
+	
+	<select id="findOne" parameterType="map" resultMap="tradeRecordMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_trade_record 
+		<choose>
+		   <when test="tradeRecordId!=null">
+		   	  where trade_record_id=#{tradeRecordId}	
+		   </when>
+		</choose>
+	</select>
+	<sql id="orderSql">
+		<if test="sort_column=='tradeTime'">
+		 	order by trade_time
+		</if>
+		<if test="sort_column=='tradePrice'">
+		 	order by trade_price 
+		</if>
+		<if test="sort_column=='tradeNum'">
+		 	order by trade_num 
+		</if>
+		<if test="sort_column=='tradeType'">
+		 	order by trade_type 
+		</if>
+		<if test="sort_column=='tradeStatus'">
+		 	order by trade_status 
+		</if>
+		<if test="sort_column=='tradeRecordCreateTime'">
+		 	order by trade_record_create_time 
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="tradeRecordMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as trade_record_id
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_trade_record
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (trade_price like #{keywords} or trade_num like #{keywords} or trade_type like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by trade_record_create_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+	
+</mapper>

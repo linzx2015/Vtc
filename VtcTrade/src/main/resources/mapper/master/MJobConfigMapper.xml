@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MJobConfigDao">
+	<!--返回结果自定义map -->
+	<resultMap id="jobConfigMap" type="com.kkk.vtctrade.vo.master.MJobConfig">
+		<id property="jobId" column="job_id"/>
+		<result property="jobName" column="job_name"/>		
+		<result property="jobGroup" column="job_group"/>		
+		<result property="jobCronExpression" column="job_cron_expression"/>		
+		<result property="jobTrigger" column="job_trigger"/>		
+		<result property="jobStatus" column="job_status"/>		
+		<result property="jobDescription" column="job_description"/>		
+		<result property="jobCreateTime" column="job_create_time"/>		
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		job_id,
+		job_name,
+		job_group,
+		job_cron_expression,
+		job_trigger,
+		job_status,
+		job_description,
+		job_create_time
+	</sql>
+	
+	<!--传入参数自定义map -->
+	<parameterMap id="MJobConfig" type="com.kkk.vtctrade.vo.master.MJobConfig"/>
+	
+	<insert id="insertOne" parameterMap="MJobConfig">
+		insert into m_job_config(<include refid="Base_Column_List"></include>)
+		values(#{jobId},#{jobName},#{jobGroup},#{jobCronExpression},
+			   #{jobTrigger},#{jobStatus},#{jobDescription},#{jobCreateTime})
+	</insert>
+	
+	<update id="updateOne" parameterMap="MJobConfig">
+		update  m_job_config 
+		<set>
+			job_name=#{jobName},
+			job_group=#{jobGroup},
+			job_cron_expression=#{jobCronExpression},
+			job_trigger=#{jobTrigger},
+			job_status=#{jobStatus},
+			job_description=#{jobDescription},
+			job_create_time=#{jobCreateTime}
+		</set> 
+		where job_id=#{jobId}
+	</update>
+	
+	<delete id="deleteOne" parameterMap="MJobConfig">
+		<if test="virtualCoinId!=null">
+			delete from m_job_config where job_id=#{jobId}
+		</if>		
+	</delete>
+	
+	<select id="findOne" parameterType="map" resultMap="jobConfigMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_job_config 
+		<choose>
+		   <when test="jobId!=null">
+		   	  where job_id=#{jobId}	
+		   </when>
+		   <when test="jobName!=null">
+		   	  where job_name=#{jobName}
+		   </when>
+		</choose>
+	</select>
+	
+	<sql id="orderSql">
+		<if test="sort_column=='jobName'">
+		 	order by job_name
+		</if>
+		<if test="sort_column=='jobGroup'">
+		 	order by job_group 
+		</if>
+		<if test="sort_column=='jobStatus'">
+		 	order by job_status 
+		</if>
+		<if test="sort_column=='jobCreateTime'">
+		 	order by job_create_time 
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="jobConfigMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as job_id
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_job_config
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (job_name like #{keywords} or job_group like #{keywords} or job_trigger like #{keywords},
+					 job_status like #{keywords} or job_description like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by job_create_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+	
+</mapper>

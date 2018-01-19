@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MVirtualCoinDao">
+	<!--返回结果自定义map -->
+	<resultMap id="virtualCoinMap" type="com.kkk.vtctrade.vo.master.MVirtualCoin">
+		<id property="virtualCoinId" column="virtual_coin_id"/>
+		<result property="virtualCoinName" column="virtual_coin_name"/>		
+		<result property="virtualCoinType" column="virtual_coin_type"/>
+		<result property="vitualCoinCreateTime" column="virtual_coin_create_time"/>
+		<result property="vitualCoinUpdateTime" column="virtual_coin_update_time"/>
+		<result property="virtualCreateUser" column="virtual_create_user"/>
+		<result property="virtualStatus" column="virtual_status"/>
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		virtual_coin_id,
+		virtual_coin_name,
+		virtual_coin_type,
+		virtual_coin_create_time,
+		virtual_coin_update_time,
+		virtual_create_user,
+		virtual_status
+	</sql>
+	
+	<!--传入参数自定义map -->
+	<parameterMap id="MVirtualCoin" type="com.kkk.vtctrade.vo.master.MVirtualCoin"/>
+	
+	<insert id="insertOne" parameterMap="MVirtualCoin">
+		insert into m_virtual_coin(<include refid="Base_Column_List"></include>)
+		values(#{virtualCoinId},#{virtualCoinName},#{virtualCoinType},#{vitualCoinCreateTime},
+			   #{vitualCoinUpdateTime},#{virtualCreateUser},#{virtualStatus})
+	</insert>
+	
+	<update id="updateOne" parameterMap="MVirtualCoin">
+		update  m_virtual_coin 
+		<set>
+			virtual_coin_name=#{virtualCoinName},virtual_coin_type=#{virtualCoinType},virtual_coin_create_time=#{vitualCoinCreateTime},
+			   virtual_coin_update_time=#{vitualCoinUpdateTime},virtual_create_user=#{virtualCreateUser},virtual_status=#{virtualStatus}
+		</set> 
+		where virtual_coin_id=#{virtualCoinId}
+	</update>
+	
+	<delete id="deleteOne" parameterMap="MVirtualCoin">
+		<if test="virtualCoinId!=null">
+			delete from m_virtual_coin where virtual_coin_id=#{virtualCoinId}
+		</if>		
+	</delete>
+	
+	<select id="findOne" parameterType="map" resultMap="virtualCoinMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_virtual_coin 
+		<choose>
+		   <when test="virtualCoinId!=null">
+		   	  where virtual_coin_id=#{virtualCoinId}	
+		   </when>
+		   <when test="virtualCoinName!=null">
+		   	  where virtual_coin_name=#{virtualCoinName}
+		   </when>
+		</choose>
+	</select>
+	
+	<sql id="orderSql">
+		<if test="sort_column=='virtualCoinName'">
+		 	order by virtual_coin_name
+		</if>
+		<if test="sort_column=='virtualCoinType'">
+		 	order by virtual_coin_type 
+		</if>
+		<if test="sort_column=='vitualCoinCreateTime'">
+		 	order by virtual_coin_create_time 
+		</if>
+		<if test="sort_column=='vitualCoinUpdateTime'">
+		 	order by virtual_coin_update_time 
+		</if>
+		<if test="sort_column=='virtualCreateUser'">
+		 	order by virtual_create_user 
+		</if>
+		<if test="sort_column=='virtualStatus'">
+		 	order by virtual_status 
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="virtualCoinMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as virtual_coin_id
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_virtual_coin
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (virtual_coin_name like #{keywords} or virtual_coin_type like #{keywords} or virtual_create_user like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by virtual_coin_create_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+	
+</mapper>

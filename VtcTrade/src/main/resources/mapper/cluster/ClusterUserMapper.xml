@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.cluster.ClusterUserDao">
+	<resultMap id="BaseResultMap" type="com.kkk.vtctrade.vo.cluster.ClusterUser">
+		<result property="cId" column="c_id"/>
+		<result property="cName" column="c_name"/>
+	</resultMap>
+
+	<parameterMap id="ClusterUser" type="com.kkk.vtctrade.vo.cluster.ClusterUser"/>
+
+	<sql id="Base_Column_List">
+		c_id, c_name
+	</sql>
+
+	<select id="findOne" parameterType="map" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from cluster_user
+		where c_name = #{cName}
+	</select>
+
+</mapper>

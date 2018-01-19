@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MarketDetailDeepDao">
+	<!--返回结果自定义map -->
+	<resultMap id="BaseResultMap" type="com.kkk.vtctrade.vo.master.MMarketDetailDeep">
+		<id property="marketDeepId" column="market_deep_id"/>
+		<result property="virtualCoinId" column="virtual_coin_id"/>
+		<result property="marketDeepSellId" column="market_deep_sell_id"/>
+		<result property="marketDeepBuyId" column="market_deep_buy_id"/>
+		<result property="marketCreateTime" column="market_create_time"/>
+		<result property="marketDeepStatus" column="market_deep_status"/>
+		<association property="virtualCoin" column="virtual_coin_id" javaType="com.kkk.vtctrade.vo.master.MVirtualCoin" select="queryVirtualCoinSql"/>
+		<collection property="marketDeepBuy" column="market_deep_buy_id" ofType="com.kkk.vtctrade.vo.master.MMarketDeepBuy" select="queryBuySql"/>
+		<collection property="marketDeepSell" column="market_deep_sell_id" ofType="com.kkk.vtctrade.vo.master.MMarketDeepSell" select="querySellSql"/>
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		market_deep_id,
+		virtual_coin_id,
+		market_deep_sell_id,
+		market_deep_buy_id,
+		market_create_time,
+		market_deep_status
+	</sql>
+	
+	<!--传入参数自定义map -->
+	<parameterMap id="MMarketDetailDeep" type="com.kkk.vtctrade.vo.master.MMarketDetailDeep"/>
+	
+	<insert id="insertOne" parameterMap="MMarketDetailDeep">
+		insert into m_market_detail_deep(<include refid="Base_Column_List"></include>)
+		values(#{marketDeepId},#{virtualCoinId},#{marketDeepSellId},#{marketDeepBuyId},
+			   #{marketCreateTime},#{marketDeepStatus})
+	</insert>
+	
+	<update id="updateOne" parameterMap="MMarketDetailDeep">
+		update  m_market_detail_deep 
+		<set>
+			virtual_coin_id=#{virtualCoinId},
+			market_deep_sell_id=#{marketDeepSellId},
+			market_deep_buy_id=#{marketDeepBuyId},
+			market_create_time=#{marketCreateTime},
+			market_deep_status=#{marketDeepStatus}
+		</set> 
+		where market_deep_id=#{marketDeepId}
+	</update>
+	
+	<delete id="deleteOne" parameterMap="MMarketDetailDeep">
+		<if test="marketDetailId!=null">
+			delete from m_market_detail_deep where market_deep_id=#{marketDetailId}
+		</if>		
+	</delete>
+	
+	<resultMap id="coinMap" type="com.kkk.vtctrade.vo.master.MVirtualCoin">
+		<id property="virtualCoinId" column="virtual_coin_id"/>
+		<result property="virtualCoinName" column="virtual_coin_name"/>		
+		<result property="virtualCoinType" column="virtual_coin_type"/>
+		<result property="vitualCoinCreateTime" column="virtual_coin_create_time"/>
+		<result property="vitualCoinUpdateTime" column="virtual_coin_update_time"/>
+		<result property="virtualCreateUser" column="virtual_create_user"/>
+		<result property="virtualStatus" column="virtual_status"/>
+	</resultMap>
+	
+	<resultMap id="buyMap" type="com.kkk.vtctrade.vo.master.MMarketDeepBuy">
+		<result property="deepBuyId" column="deep_buy_id"/>
+		<result property="deepBuyPrice" column="deep_buy_price"/>
+		<result property="deepBuyNum" column="deep_buy_num"/>
+		<result property="deepBuyCreateTime" column="deep_buy_create_time"/>
+		<result property="deepBuyStatus" column="deep_buy_status"/>
+	</resultMap>
+	
+	<resultMap id="sellMap" type="com.kkk.vtctrade.vo.master.MMarketDeepSell">
+		<result property="deepSellId" column="deep_sell_id"/>
+		<result property="deepSellPrice" column="deep_sell_price"/>
+		<result property="deepSellNum" column="deep_sell_num"/>
+		<result property="deepSellCreateTime" column="deep_sell_create_time"/>
+		<result property="deepSellStatus" column="deep_sell_status"/>
+	</resultMap>
+	
+	<select id="queryVirtualCoinSql" resultMap="coinMap">
+		select * from m_virtual_coin where virtual_coin_id=#{virtualCoinId}
+	</select>
+	
+	<select id="queryBuySql" resultMap="buyMap">
+		select * from m_market_deep_buy where deep_buy_id=#{marketDeepBuyId}
+	</select>
+	
+	<select id="querySellSql" resultMap="sellMap">
+		select * from m_market_deep_sell where deep_sell_id=#{marketDeepSellId}
+	</select>
+
+	<select id="findOne" parameterType="map" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_market_detail_deep 
+		<choose>
+		   <when test="marketDetailId!=null">
+		   	  where market_deep_id=#{marketDetailId}
+		   </when>
+		</choose>
+	</select>
+
+	<sql id="orderSql">
+		<if test="sort_column=='marketCreateTime'">
+		 	order by market_create_time
+		</if>
+		<if test="sort_column=='marketDeepStatus'">
+		 	order by market_deep_status 
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="BaseResultMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as market_deep_id
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_market_detail_deep
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (market_deep_status like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by market_create_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+	
+</mapper>

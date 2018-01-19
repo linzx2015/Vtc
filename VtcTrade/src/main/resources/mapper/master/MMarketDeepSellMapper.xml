@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MarketDeepSellDao">
+	<!--返回结果自定义map -->
+	<resultMap id="BaseResultMap" type="com.kkk.vtctrade.vo.master.MMarketDeepSell">
+		<result property="deepSellId" column="deep_sell_id"/>
+		<result property="deepSellPrice" column="deep_sell_price"/>
+		<result property="deepSellNum" column="deep_sell_num"/>
+		<result property="deepSellCreateTime" column="deep_sell_create_time"/>
+		<result property="deepSellStatus" column="deep_sell_status"/>
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		deep_sell_id,
+		deep_sell_price,
+		deep_sell_num,
+		deep_sell_create_time,
+		deep_sell_status
+	</sql>
+	
+	<!--传入参数自定义map -->
+	<parameterMap id="MMarketDeepSell" type="com.kkk.vtctrade.vo.master.MMarketDeepSell"/>
+	
+	<insert id="insertOne" parameterMap="MMarketDeepSell">
+		insert into m_market_deep_sell(<include refid="Base_Column_List"></include>)
+		values(#{deepSellId},#{deepSellPrice},#{deepSellNum},#{deepSellCreateTime},#{deepSellStatus})
+	</insert>
+	
+	<update id="updateOne" parameterMap="MMarketDeepSell">
+		update  m_market_deep_sell 
+		<set>
+			deep_sell_price=#{deepSellPrice},
+			deep_sell_num=#{deepSellNum},
+			deep_sell_create_time=#{deepSellCreateTime},
+			deep_sell_status=#{deepSellStatus}
+		</set> 
+		where deep_sell_id=#{deepSellId}
+	</update>
+	
+	<delete id="deleteOne" parameterMap="MMarketDeepSell">
+		<if test="deepSellId!=null">
+			delete from m_market_deep_sell where deep_sell_id=#{deepSellId}
+		</if>		
+	</delete>
+	
+	<select id="findOne" parameterType="map" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_market_deep_sell 
+		<choose>
+		   <when test="deepSellId!=null">
+		   	  where deep_sell_id=#{deepSellId}
+		   </when>
+		</choose>
+	</select>
+
+	<sql id="orderSql">
+		<if test="sort_column=='deepSellPrice'">
+		 	order by deep_sell_price
+		</if>
+		<if test="sort_column=='deepSellNum'">
+		 	order by deep_sell_num 
+		</if>
+		<if test="sort_column=='deepSellCreateTime'">
+		 	order by deep_sell_create_time 
+		</if>
+		<if test="sort_column=='deepSellStatus'">
+		 	order by deep_sell_status 
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="BaseResultMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as deep_sell_id
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_market_deep_sell
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (deep_sell_price like #{keywords} or deep_sell_num like #{keywords} or deep_sell_status like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by deep_sell_create_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+	
+</mapper>

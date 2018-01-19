@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.kkk.vtctrade.dao.master.MBtcUserDao">
+	<!--返回结果自定义map -->
+	<resultMap id="userBtcMap" type="com.kkk.vtctrade.vo.master.MBtcUser">
+		<id property="userPrimaryId" column="user_primary_id"/>
+		<result property="userBtcUid" column="user_btc_uid"/>
+		<result property="userNameAuth" column="user_name_auth"/>		
+		<result property="userMobileFlag" column="user_mobile_flag"/>
+		<result property="userAsset" column="user_asset"/>
+		<result property="userBtcBalance" column="user_btc_balance"/>
+		<result property="userBtcReserved" column="user_btc_reserved"/>
+		<result property="userLtcBalance" column="user_ltc_balance"/>
+		<result property="userLtcReserved" column="user_ltc_reserved"/>
+		<result property="userDogeBalance" column="user_doge_balance"/>
+		<result property="userDogeReserved" column="user_doge_reserved"/>
+		<result property="userYbcBalance" column="user_ybc_balance"/>
+		<result property="userYbcReserved" column="user_ybc_reserved"/>
+		<result property="userCnyBalance" column="user_cny_balance"/>
+		<result property="userCnyReserved" column="user_cny_reserved"/>
+		<result property="userRequestTime" column="user_request_time"/>
+		<result property="userId" column="user_id"/>
+		<result property="userNonce" column="user_nonce"/>
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		user_primary_id,
+		user_btc_uid,
+		user_name_auth,
+		user_mobile_flag,
+		user_asset,
+		user_btc_balance,
+		user_btc_reserved,
+		user_ltc_balance,
+		user_ltc_reserved,
+		user_doge_balance,
+		user_doge_reserved,
+		user_ybc_balance,
+		user_ybc_reserved,
+		user_cny_balance,
+		user_cny_reserved,
+		user_request_time,
+		user_id,
+		user_nonce
+	</sql>
+	
+	<!--传入参数自定义map -->
+	<parameterMap id="MBtcUser" type="com.kkk.vtctrade.vo.master.MBtcUser"/>
+	
+	<insert id="insertOne" parameterMap="MBtcUser">
+		insert into m_btc_user(<include refid="Base_Column_List"></include>)
+		values(#{userPrimaryId},#{userBtcUid},#{userNameAuth},#{userMobileFlag},#{userAsset},#{userBtcBalance},
+				#{userBtcReserved},#{userLtcBalance},#{userLtcReserved},#{userDogeBalance},
+				#{userDogeReserved},#{userYbcBalance},#{userYbcReserved},#{userCnyBalance},
+				#{userCnyReserved},#{userRequestTime},#{userId},#{userNonce})
+	</insert>
+	<update id="updateOne" parameterMap="MBtcUser">
+		update  m_btc_user 
+		<set>
+			user_btc_uid=#{userBtcUid},
+			user_name_auth=#{userNameAuth},
+			user_mobile_flag=#{userMobileFlag},
+			user_asset=#{userAsset},
+			user_btc_balance=#{userBtcBalance},
+			user_btc_reserved=#{userBtcReserved},
+			user_ltc_balance=#{userLtcBalance},
+			user_ltc_reserved=#{userLtcReserved},
+			user_doge_balance=#{userDogeBalance},
+			user_doge_reserved=#{userDogeReserved},
+			user_ybc_balance=#{userYbcBalance},
+			user_ybc_reserved=#{userYbcReserved},
+			user_cny_balance=#{userCnyBalance},
+			user_cny_reserved=#{userCnyReserved},
+			user_request_time=#{userRequestTime},
+			user_id=#{userId},
+			user_nonce=#{userNonce}
+		</set> 
+		where user_primary_id=#{userPrimaryId}
+	</update>
+	
+	<delete id="deleteOne" parameterMap="MBtcUser">
+		<if test="userPrimaryId!=null">
+			delete from m_btc_user where user_primary_id=#{userPrimaryId}
+		</if>		
+	</delete>
+	
+	<select id="findOne" parameterType="map" resultMap="userBtcMap">
+		select
+		<include refid="Base_Column_List" />
+		from m_btc_user 
+		<choose>
+		   <when test="userPrimaryId!=null">
+		   	  where user_primary_id=#{userPrimaryId}	
+		   </when>
+		</choose>
+	</select>
+	
+	<sql id="orderSql">
+		<if test="sort_column=='userRequestTime'">
+		 	order by user_request_time
+		</if>
+	</sql>
+	
+	<!-- 植物工厂类型、创建时间、创建人、排序-->
+	<select id="findMulti" parameterType="map" resultMap="userBtcMap">
+		<choose>
+			<when test="pageCond=='true'">
+				select count(*) as user_primary_id
+			</when>
+			<otherwise>
+				select * 
+			</otherwise>
+		</choose>
+		from m_btc_user
+		<where>
+			<if test="keywords!=null and keywords!=''">
+				and (user_asset like #{keywords} or user_name_auth like #{keywords} or user_mobile_flag like #{keywords})
+			</if>
+		</where>
+		<choose>
+			<when test="pageCond=='true'">
+			</when>
+			<otherwise>
+				<choose>
+					<when test="sort_column!=null and sort_type==0">
+						<include refid="orderSql"></include> asc
+					</when>
+					<when test="sort_column!=null and sort_type==1">
+						<include refid="orderSql"></include> desc
+					</when>
+					<otherwise>
+						order by user_request_time desc
+					</otherwise>
+				</choose>
+			</otherwise>
+		</choose>
+		<if test="pageCond=='false'">
+			limit #{page},#{pagenum}
+		</if>
+	</select>
+	
+</mapper>
